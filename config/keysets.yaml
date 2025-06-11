@@ -1,0 +1,47 @@
+# Keyset configurations for secure channel establishment
+keysets:
+  default_scp02:
+    protocol: "SCP02"
+    enc_key: "404142434445464748494A4B4C4D4E4F"
+    mac_key: "404142434445464748494A4B4C4D4E4F"
+    dek_key: "404142434445464748494A4B4C4D4E4F"
+    key_version: 1
+    security_level: 3
+    
+  default_scp03:
+    protocol: "SCP03"
+    enc_key: "404142434445464748494A4B4C4D4E4F"
+    mac_key: "404142434445464748494A4B4C4D4E4F"
+    dek_key: "404142434445464748494A4B4C4D4E4F"
+    key_version: 1
+    security_level: 3
+    
+  test_keyset:
+    protocol: "SCP03"
+    enc_key: "000102030405060708090A0B0C0D0E0F"
+    mac_key: "101112131415161718191A1B1C1D1E1F"
+    dek_key: "202122232425262728292A2B2C2D2E2F"
+    key_version: 2
+    security_level: 1
+
+# Security Domain templates
+security_domains:
+  issuer_sd:
+    type: "ISD"  # Issuer Security Domain
+    aid: "A000000151000000"
+    privileges: "A0"
+    
+  supplementary_sd:
+    type: "SSD"  # Supplementary Security Domain
+    aid: "A00000015100"
+    privileges: "C0"
+    
+  application_sd:
+    type: "AMSD"  # Application Security Domain
+    aid: "A0000001510001"
+    privileges: "80"
+    
+  delegated_sd:
+    type: "DMSD"  # Delegated Management Security Domain
+    aid: "A0000001510002"
+    privileges: "E0"

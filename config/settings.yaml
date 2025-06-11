@@ -1,0 +1,28 @@
+# Application settings
+app:
+  name: "Smartcard Management Tool"
+  version: "1.0.0"
+  debug: false
+  
+# Logging configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/ccm_tool.log"
+  
+# PC/SC settings
+pcsc:
+  timeout: 5000  # milliseconds
+  protocols: ["T0", "T1"]
+  
+# GlobalPlatform settings
+globalplatform:
+  default_manager_aid: "A000000151000000"
+  max_apdu_size: 255
+  
+# Visualization settings
+visualization:
+  output_format: "png"
+  output_directory: "output"
+  show_privileges: true
+  show_lifecycle: true

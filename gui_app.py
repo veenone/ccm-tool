@@ -1355,8 +1355,7 @@ Instructions:
             
         except Exception as e:
             messagebox.showerror("Error", f"Failed to clear OTA history: {e}")
-    
-    # Event handlers and utility methods
+      # Event handlers and utility methods
     
     def refresh_readers(self):
         """Refresh the list of available readers"""
@@ -1375,8 +1374,16 @@ Instructions:
                 self.update_status("No PC/SC readers found")
                 
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to scan readers: {e}")
-            self.update_status("Error scanning readers")
+            error_msg = str(e)
+            print(f"Debug: Reader scan error - {error_msg}")  # Debug output
+            messagebox.showerror("PC/SC Error", 
+                f"PC/SC Service Issue:\n\n{error_msg}\n\n" +
+                "Please check:\n" +
+                "• PC/SC service is running\n" +
+                "• Smart card reader is connected\n" +
+                "• Reader drivers are installed\n" +
+                "• No other applications are using the reader")
+            self.update_status("PC/SC Error - Check reader connection")
     
     def connect_to_reader(self):
         """Connect to the selected reader"""
@@ -1399,24 +1406,41 @@ Instructions:
                     self.connection_info.insert("end", f"✅ Connected to {reader_name}\n")
                     self.connection_info.insert("end", f"✅ Card Manager selected\n")
                     self.update_status("Connected successfully")
-                    
-                    # Get ATR
-                    atr = self.sc_manager.active_reader.get_atr()
-                    self.connection_info.insert("end", f"ATR: {toHexString(atr)}\n")
-                    
-                    # Refresh card data
+                      # Get ATR safely
+                    try:
+                        if self.sc_manager.active_reader:
+                            atr = self.sc_manager.active_reader.get_atr()
+                            self.connection_info.insert("end", f"ATR: {toHexString(atr)}\n")
+                        else:
+                            self.connection_info.insert("end", "ATR: Not available (no active reader)\n")
+                    except Exception as atr_error:
+                        self.connection_info.insert("end", f"ATR: Error reading - {atr_error}\n")
+                      # Refresh card data
                     self.refresh_card_data()
                 else:
                     self.connection_info.insert("end", f"✅ Connected to {reader_name}\n")
                     self.connection_info.insert("end", f"⚠️ Could not select Card Manager\n")
                     self.update_status("Connected, but Card Manager not available")
             else:
-                messagebox.showerror("Error", f"Failed to connect to {reader_name}")
-                self.update_status("Connection failed")
+                error_msg = "Failed to connect to reader"
+                messagebox.showerror("Connection Error", 
+                    f"Connection Failed:\n\n{error_msg}\n\n" +
+                    "Possible causes:\n" +
+                    "• No card inserted in reader\n" +
+                    "• Card is not responding\n" +
+                    "• Reader is busy with another application\n" +
+                    "• PC/SC service issue")
+                self.update_status("Connection failed - Check card and reader")
                 
         except Exception as e:
-            messagebox.showerror("Error", f"Connection error: {e}")
-            self.update_status("Connection error")
+            error_msg = str(e)
+            print(f"Debug: Connection error - {error_msg}")  # Debug output
+            messagebox.showerror("Connection Error", 
+                f"Connection Exception:\n\n{error_msg}\n\n" +
+                "This may indicate:\n" +                "• PC/SC middleware issue\n" +
+                "• Reader driver problem\n" +
+                "• Hardware malfunction")
+            self.update_status(f"Connection error: {error_msg}")
     
     def disconnect_from_reader(self):
         """Disconnect from the current reader"""
@@ -1428,13 +1452,19 @@ Instructions:
             self.sc_manager.disconnect_all()
             self.connected_reader = None
             
-            self.connect_btn.configure(state="normal")
-            self.disconnect_btn.configure(state="disabled")
-            self.establish_btn.configure(state="normal")
-            self.close_sc_btn.configure(state="disabled")
+            # Safely update button states if they exist
+            if hasattr(self, 'connect_btn'):
+                self.connect_btn.configure(state="normal")
+            if hasattr(self, 'disconnect_btn'):
+                self.disconnect_btn.configure(state="disabled")
+            if hasattr(self, 'establish_btn'):
+                self.establish_btn.configure(state="normal")
+            if hasattr(self, 'close_sc_btn'):
+                self.close_sc_btn.configure(state="disabled")
             
             self.update_connection_status()
-            self.connection_info.insert("end", "🔌 Disconnected from all readers\n")
+            if hasattr(self, 'connection_info'):
+                self.connection_info.insert("end", "🔌 Disconnected from all readers\n")
             self.update_status("Disconnected")
             
         except Exception as e:
@@ -1465,13 +1495,17 @@ Instructions:
             
             if self.secure_channel.establish_secure_channel(keyset, security_level):
                 self.secure_channel_active = True
-                self.establish_btn.configure(state="disabled")
-                self.close_sc_btn.configure(state="normal")
+                # Safely update button states if they exist
+                if hasattr(self, 'establish_btn'):
+                    self.establish_btn.configure(state="disabled")
+                if hasattr(self, 'close_sc_btn'):
+                    self.close_sc_btn.configure(state="normal")
                 self.update_connection_status()
                 
-                self.sc_info.insert("end", f"✅ Secure channel established\n")
-                self.sc_info.insert("end", f"Protocol: {keyset.protocol}\n")
-                self.sc_info.insert("end", f"Security Level: {security_level}\n")
+                if hasattr(self, 'sc_info'):
+                    self.sc_info.insert("end", f"✅ Secure channel established\n")
+                    self.sc_info.insert("end", f"Protocol: {keyset.protocol}\n")
+                    self.sc_info.insert("end", f"Security Level: {security_level}\n")
                 self.update_status("Secure channel established")
             else:
                 messagebox.showerror("Error", "Failed to establish secure channel")
@@ -1487,11 +1521,15 @@ Instructions:
             self.secure_channel.close_secure_channel()
             self.secure_channel_active = False
             
-            self.establish_btn.configure(state="normal")
-            self.close_sc_btn.configure(state="disabled")
+            # Safely update button states if they exist
+            if hasattr(self, 'establish_btn'):
+                self.establish_btn.configure(state="normal")
+            if hasattr(self, 'close_sc_btn'):
+                self.close_sc_btn.configure(state="disabled")
             self.update_connection_status()
             
-            self.sc_info.insert("end", "🔒 Secure channel closed\n")
+            if hasattr(self, 'sc_info'):
+                self.sc_info.insert("end", "🔒 Secure channel closed\n")
             self.update_status("Secure channel closed")
             
         except Exception as e:
